@@ -4,7 +4,10 @@ import 'package:wizard_test/models/contact_model.dart';
 
 class ContactFormScreen extends StatefulWidget {
   final ContactModel? selectedContact;
-  const ContactFormScreen({super.key, this.selectedContact,});
+  const ContactFormScreen({
+    super.key,
+    this.selectedContact,
+  });
 
   @override
   State<ContactFormScreen> createState() => _ContactFormScreenState();
@@ -14,13 +17,18 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
   final TextEditingController _firstNameTec = TextEditingController();
   final TextEditingController _lastNameTec = TextEditingController();
   final TextEditingController _emailTec = TextEditingController();
+
+  final FocusNode _firstNameNode = FocusNode();
+  final FocusNode _lastNameNode = FocusNode();
+  final FocusNode _emailNode = FocusNode();
+
   DateTime? birthdate;
 
   @override
   void initState() {
     super.initState();
 
-    if(widget.selectedContact != null){
+    if (widget.selectedContact != null) {
       _firstNameTec.text = widget.selectedContact?.firstName ?? '';
       _lastNameTec.text = widget.selectedContact?.lastName ?? '';
       _emailTec.text = widget.selectedContact?.email ?? '';
@@ -35,18 +43,18 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
         backgroundColor: Colors.grey.shade100,
         leadingWidth: 75,
         leading: Padding(
-          padding: EdgeInsets.only(
+          padding: const EdgeInsets.only(
             top: 16,
             left: 8,
           ),
           child: InkWell(
-            onTap: (){
+            onTap: () {
               Navigator.of(context).pop();
             },
             child: Text(
               'Cancel',
               style: TextStyle(
-                color: Colors.orange,
+                color: Colors.orange.shade600,
                 fontSize: 16,
               ),
             ),
@@ -54,14 +62,25 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
         ),
         actions: [
           Padding(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               right: 16,
             ),
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: Colors.orange,
-                fontSize: 16,
+            child: InkWell(
+              onTap: () {
+                if (_firstNameTec.text.isEmpty) {}
+                Navigator.of(context).pop(ContactModel(
+                  firstName: _firstNameTec.text,
+                  lastName: _lastNameTec.text,
+                  email: _emailTec.text,
+                  dob: DateFormat('d/M/yyyy').format(birthdate!),
+                ));
+              },
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  color: Colors.orange.shade600,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -69,40 +88,50 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
       ),
       body: SafeArea(
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(
               top: BorderSide(color: Colors.black26),
             ),
           ),
-          child: Column(
-            children: [
-              CircleAvatar(
-                backgroundColor: Colors.orange,
-                radius: 50,
-              ),
-              _buildSectionTitle('Main Information'),
-              _buildTextField(
-                labelText: 'First Name',
-                textEditingController: _firstNameTec,
-              ),
-              _buildTextField(
-                labelText: 'Last Name',
-                textEditingController: _lastNameTec,
-                isLast: true,
-              ),
-              _buildSectionTitle('Sub Information'),
-              _buildTextField(
-                labelText: 'Email',
-                textEditingController: _emailTec,
-                textInputType: TextInputType.emailAddress,
-              ),
-              _buildTextField(
-                labelText: 'DOB',
-                textEditingController: _lastNameTec,
-                isDob: true,
-                isLast: true,
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 32,
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.orange.shade600,
+                    radius: 50,
+                  ),
+                ),
+                _buildSectionTitle('Main Information'),
+                _buildTextField(
+                  labelText: 'First Name',
+                  textEditingController: _firstNameTec,
+                  focusNode: _firstNameNode,
+                ),
+                _buildTextField(
+                  labelText: 'Last Name',
+                  textEditingController: _lastNameTec,
+                  focusNode: _lastNameNode,
+                  isLast: true,
+                ),
+                _buildSectionTitle('Sub Information'),
+                _buildTextField(
+                  labelText: 'Email',
+                  textEditingController: _emailTec,
+                  textInputType: TextInputType.emailAddress,
+                  focusNode: _emailNode,
+                ),
+                _buildTextField(
+                  labelText: 'DOB',
+                  textEditingController: _lastNameTec,
+                  isDob: true,
+                  isLast: true,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -113,17 +142,17 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
-          border: Border(
+          border: const Border(
             bottom: BorderSide(color: Colors.black26),
           ),
         ),
-        padding: EdgeInsets.symmetric(
-          horizontal: 8,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
           vertical: 18,
         ),
         child: Text(
           titleText,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -133,12 +162,13 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
   Widget _buildTextField({
     required String labelText,
     TextEditingController? textEditingController,
+    FocusNode? focusNode,
     TextInputType? textInputType,
     bool isDob = false,
     bool isLast = false,
   }) =>
       Padding(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: 16,
         ),
         child: Column(
@@ -153,7 +183,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                   flex: 2,
                   child: Text(
                     labelText,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                     ),
                   ),
@@ -161,39 +191,57 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 Expanded(
                   flex: 6,
                   child: isDob
-                      ? Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey.shade400,
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                birthdate == null ? 'Click to choose date' : DateFormat('dd MMMM yyyy').format(birthdate!),
-                                style: TextStyle(
-                                  color: birthdate == null ? Colors.grey : Colors.black,
-                                ),
+                      ? InkWell(
+                          onTap: () async {
+                           DateTime? selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: birthdate ?? DateTime.now(),
+                              lastDate: DateTime.now(),
+                              firstDate: DateTime.parse('1900-01-01'),
+                            );
+
+                           setState(() {
+                             birthdate = selectedDate;
+                           });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey.shade400,
                               ),
-                              Icon(
-                                Icons.edit_calendar,
-                                color: Colors.grey.shade700,
-                              )
-                            ],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  birthdate == null
+                                      ? 'Click to choose date'
+                                      : DateFormat('dd MMMM yyyy').format(birthdate!),
+                                  style: TextStyle(
+                                    color: birthdate == null ? Colors.grey : Colors.black,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.edit_calendar,
+                                  color: Colors.grey.shade700,
+                                )
+                              ],
+                            ),
                           ),
                         )
                       : TextField(
+                          textInputAction: TextInputAction.next,
                           controller: textEditingController,
-                          cursorColor: Colors.orange,
+                          focusNode: focusNode,
+                          cursorColor: Colors.orange.shade600,
                           keyboardType: textInputType,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
                             ),
@@ -205,7 +253,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                color: Colors.orange,
+                                color: Colors.orange.shade600,
                               ),
                             ),
                           ),
@@ -213,7 +261,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                 )
               ],
             ),
-            Divider(),
+            const Divider(),
           ],
         ),
       );
