@@ -74,27 +74,36 @@ class _ContactListScreenState extends State<ContactListScreen> {
     );
   }
 
-  Widget _buildContactItem(ContactModel contact) => Container(
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.black26),
-    ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        CircleAvatar(
-          backgroundColor: Colors.orange,
-          radius: 30,
-        ),
-        Text(
-          contact.fullName ?? '',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+  Widget _buildContactItem(ContactModel contact) => InkWell(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => ContactFormScreen(
+              selectedContact: contact,
+            ),
+          ));
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black26),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.orange,
+                radius: 30,
+              ),
+              Text(
+                contact.fullName ?? '',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-  );
+      );
 
   void getContactList() async {
     final tempList = await jsonHelper.readJson();

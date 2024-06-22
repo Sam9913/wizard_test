@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class ContactModel {
   String? id;
   String? firstName;
@@ -13,7 +15,7 @@ class ContactModel {
     this.dob,
   });
 
-  DateTime? get birthDate => DateTime.tryParse(dob ?? '');
+  DateTime? get birthDate => DateFormat('d/M/yyyy').tryParse(dob ?? '');
   String? get fullName => '$firstName $lastName';
 
   ContactModel.fromJson(Map<String, dynamic> json) {
