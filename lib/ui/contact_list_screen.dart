@@ -13,6 +13,10 @@ class ContactListScreen extends StatefulWidget {
 
 class _ContactListScreenState extends State<ContactListScreen> {
   final JsonHelper jsonHelper = JsonHelper();
+  final TextEditingController _searchTec = TextEditingController();
+
+  bool isLoading = false;
+  bool isSearchMode = false;
   List<ContactModel> contactList = [];
 
   @override
@@ -27,11 +31,24 @@ class _ContactListScreenState extends State<ContactListScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey.shade100,
-        leading: Icon(
-          Icons.search,
-          color: Colors.orange,
+        leading: InkWell(
+          onTap: () {
+            if(isSearchMode){
+              _searchTec.clear();
+              getContactList();
+            }
+
+            setState(() {
+              isSearchMode = !isSearchMode;
+            });
+          },
+          child: Icon(
+            isSearchMode ? Icons.close : Icons.search,
+            color: Colors.orange.shade600,
+          ),
         ),
-        title: Text(
+        centerTitle: true,
+        title: const Text(
           'Contacts',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -39,48 +56,135 @@ class _ContactListScreenState extends State<ContactListScreen> {
         ),
         actions: [
           Padding(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               right: 16,
             ),
-            child: Icon(
-              Icons.add,
-              color: Colors.orange,
+            child: InkWell(
+              onTap: () async {
+                final result = await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const ContactFormScreen(),
+                ));
+
+                setState(() {
+                  contactList.add(result);
+                });
+              },
+              child: Icon(
+                Icons.add,
+                color: Colors.orange.shade600,
+              ),
             ),
           ),
         ],
       ),
       body: SafeArea(
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border(top: BorderSide(color: Colors.black26)),
           ),
-          child: GridView.builder(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 24,
-            ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-            ),
-            itemCount: contactList.length,
-            itemBuilder: (context, index) {
-              return _buildContactItem(contactList[index]);
-            },
+          child: Column(
+            children: [
+              Offstage(
+                offstage: !isSearchMode,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 8,
+                  ),
+                  child: TextField(
+                    controller: _searchTec,
+                    cursorColor: Colors.orange.shade600,
+                    onSubmitted: (value) {
+                      List<ContactModel> resultList = [];
+
+                      for (var element in contactList) {
+                        if ((element.fullName ?? '').contains(_searchTec.text)) {
+                          resultList.add(element);
+                        }
+                      }
+
+                      setState(() {
+                        contactList = resultList;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search by name',
+                      hintStyle: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 14,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Colors.orange.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: isLoading
+                    ? CircularProgressIndicator(
+                        color: Colors.orange.shade600,
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          getContactList();
+                        },
+                        child: contactList.isEmpty
+                            ? const Center(child: Text('No related result'))
+                            : GridView.builder(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: isSearchMode ? 16 : 24,
+                                ),
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                ),
+                                itemCount: contactList.length,
+                                itemBuilder: (context, index) {
+                                  return _buildContactItem(
+                                    contactList[index],
+                                    (contact) {
+                                      setState(() {
+                                        contactList[index] = contact;
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContactItem(ContactModel contact) => InkWell(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
+  Widget _buildContactItem(ContactModel contact, Function(ContactModel) onChange) => InkWell(
+        onTap: () async {
+          final result = await Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => ContactFormScreen(
               selectedContact: contact,
             ),
           ));
+
+          onChange(result);
         },
         child: Container(
           decoration: BoxDecoration(
@@ -90,12 +194,12 @@ class _ContactListScreenState extends State<ContactListScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               CircleAvatar(
-                backgroundColor: Colors.orange,
+                backgroundColor: Colors.orange.shade600,
                 radius: 30,
               ),
               Text(
                 contact.fullName ?? '',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -106,9 +210,13 @@ class _ContactListScreenState extends State<ContactListScreen> {
       );
 
   void getContactList() async {
+    setState(() {
+      isLoading = true;
+    });
     final tempList = await jsonHelper.readJson();
     setState(() {
       contactList = tempList;
+      isLoading = false;
     });
   }
 }
