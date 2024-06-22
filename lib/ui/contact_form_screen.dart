@@ -67,13 +67,22 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
             ),
             child: InkWell(
               onTap: () {
-                if (_firstNameTec.text.isEmpty) {}
-                Navigator.of(context).pop(ContactModel(
-                  firstName: _firstNameTec.text,
-                  lastName: _lastNameTec.text,
-                  email: _emailTec.text,
-                  dob: DateFormat('d/M/yyyy').format(birthdate!),
-                ));
+                if (_firstNameTec.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("First Name cannot be empty"),
+                  ));
+                } else if (_lastNameTec.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Last Name cannot be empty"),
+                  ));
+                } else{
+                  Navigator.of(context).pop(ContactModel(
+                    firstName: _firstNameTec.text,
+                    lastName: _lastNameTec.text,
+                    email: _emailTec.text,
+                    dob: DateFormat('d/M/yyyy').format(birthdate!),
+                  ));
+                }
               },
               child: Text(
                 'Save',
@@ -193,16 +202,16 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                   child: isDob
                       ? InkWell(
                           onTap: () async {
-                           DateTime? selectedDate = await showDatePicker(
+                            DateTime? selectedDate = await showDatePicker(
                               context: context,
                               initialDate: birthdate ?? DateTime.now(),
                               lastDate: DateTime.now(),
                               firstDate: DateTime.parse('1900-01-01'),
                             );
 
-                           setState(() {
-                             birthdate = selectedDate;
-                           });
+                            setState(() {
+                              birthdate = selectedDate;
+                            });
                           },
                           child: Container(
                             decoration: BoxDecoration(
